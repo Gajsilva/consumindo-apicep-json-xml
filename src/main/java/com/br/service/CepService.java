@@ -3,19 +3,20 @@ package com.br.service;
 import com.br.entity.Cep;
 
 import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 
 @Service
 public class CepService {
+
 
     public String obterCepRetornandoXml(String cep) {
         try {
@@ -93,4 +94,31 @@ public class CepService {
         }
     }
 
+    public String consultarCep(String cep) {
+        StringBuilder response = new StringBuilder();
+        try {
+            URL url = new URL("https://viacep.com.br/ws/" + cep + "/xml/");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/xml");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+            String output;
+            while ((output = br.readLine()) != null) {
+                response.append(output);
+            }
+
+            conn.disconnect();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return response.toString();
+    }
 }
+
+
